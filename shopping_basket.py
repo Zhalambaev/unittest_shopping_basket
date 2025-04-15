@@ -8,6 +8,7 @@ class Product:
     product_id: int
     name: str
     price: Decimal
+    quantity: int
 
 
 class ShoppingBasket:
@@ -19,29 +20,38 @@ class ShoppingBasket:
         """Метод преобразует данные в данные типа Decimal."""
         if isinstance(data, float):
             return Decimal(str(data))
-        else:
-            return Decimal(data)
+        return Decimal(data)
 
     def add_product(
-            self, product_id: int, name: str, price: Union[int, float, str]
+            self, product_id: int, name: str, price: Union[int, float, str], quantity: int
     ):
         """Метод добавляет товар в корзину."""
-        self.products.append(
-            Product(product_id, name, self.to_decimal(price))
-        )
+        for product in self.products:
+            if product.product_id == product_id:
+                product.quantity += quantity
+                return
+        self.products.append(Product(product_id, name, self.to_decimal(price), quantity))
 
-    def remove_product(self, product_id: int):
+    def remove_product(self, product_id: int, quantity_remove: int = None):
         """Метод удаляет товар из корзины, если он там есть."""
-        self.products = [
-                item for item in self.products
-                if item.product_id != product_id
-        ]
+        new_products = []
 
-    def total_price(self):
+        for product in self.products:
+            if product.product_id == product_id:
+                if quantity_remove is None or quantity_remove >= product.quantity:
+                    continue
+                else:
+                    product.quantity -= quantity_remove
+            new_products.append(product)
+        
+        self.products = new_products
+
+
+    def total_price(self) -> Decimal:
         """Метод рассчитывает общую стоимость всех товаров в корзине."""
-        return sum(price.price for price in self.products)
+        return sum((p.price * p.quantity for p in self.products), Decimal(0))
 
-    def discount_calc(self, discount: Union[int, str]) -> Decimal:
+    def discount_calc(self, discount: Union[int, str] = 0) -> Decimal:
         """Метод рассчитывает итоговую стоимость с учётом скидки.
         Максимальная скидка может быть 100%, минимальная — 0.
         Скидка применяется к общей стоимости всех товаров в корзине.
@@ -61,7 +71,7 @@ class ShoppingBasket:
             total_price: Decimal = self.total_price()
             fin_price = (
                 total_price - total_price
-                * self.to_decimal(discount) / 100
+                * self.to_decimal(discount) / Decimal(100)
             )
 
             return fin_price.quantize(Decimal('0.01'))
@@ -71,23 +81,36 @@ class ShoppingBasket:
                 f'меньше {min_discount} и больше {max_discount}. '
                 'Также значение должно быть целым числом.'
             )
+        
+    def clear_basket(self):
+        """Метод очищает корзину."""
+        self.products.clear()
 
 
 products_list = [
     {
         'product_id': 1,
         'name': 'chat_gpt',
-        'price': 2500
+        'price': 2500,
+        'quantity': 3
+    },
+    {
+        'product_id': 1,
+        'name': 'chat_gpt',
+        'price': 2500,
+        'quantity': 7
     },
     {
         'product_id': 2,
         'name': 'deepseek',
-        'price': 50
+        'price': 50,
+        'quantity': 1
     },
     {
         'product_id': 3,
         'name': 'alisa',
-        'price': 750.65
+        'price': 750.65,
+        'quantity': 2
     }
 ]
 basket = ShoppingBasket()
@@ -96,7 +119,11 @@ for item in products_list:
     basket.add_product(
         product_id=item.get('product_id'),
         name=item.get('name'),
-        price=item.get('price')
+        price=item.get('price'),
+        quantity=item.get('quantity')
     )
 
-print(basket.discount_calc(10))
+print(basket.products)
+basket.remove_product(1, 4)
+print(basket.products)
+
