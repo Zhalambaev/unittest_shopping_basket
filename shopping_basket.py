@@ -81,7 +81,7 @@ class ShoppingBasket:
                 f'меньше {min_discount} и больше {max_discount}. '
                 'Также значение должно быть целым числом.'
             )
-        
+
     def clear_basket(self):
         """Метод очищает корзину."""
         self.products.clear()
@@ -113,17 +113,3 @@ products_list = [
         'quantity': 2
     }
 ]
-basket = ShoppingBasket()
-
-for item in products_list:
-    basket.add_product(
-        product_id=item.get('product_id'),
-        name=item.get('name'),
-        price=item.get('price'),
-        quantity=item.get('quantity')
-    )
-
-print(basket.products)
-basket.remove_product(1, 4)
-print(basket.products)
-
