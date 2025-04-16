@@ -23,14 +23,29 @@ class ShoppingBasket:
         return Decimal(data)
 
     def add_product(
-            self, product_id: int, name: str, price: Union[int, float, str], quantity: int
+            self,
+            product_id: int,
+            name: str,
+            price: Union[int, float, str],
+            quantity: int
     ):
         """Метод добавляет товар в корзину."""
+        if quantity <= 0:
+            raise ValueError('Количество товара должно быть больше 0.')
+
+        decimal_price = self.to_decimal(price)
+
+        if decimal_price < Decimal(0):
+            raise ValueError('Цена товара не может быть меньше нуля.')
+
         for product in self.products:
             if product.product_id == product_id:
                 product.quantity += quantity
                 return
-        self.products.append(Product(product_id, name, self.to_decimal(price), quantity))
+
+        self.products.append(
+            Product(product_id, name, decimal_price, quantity)
+        )
 
     def remove_product(self, product_id: int, quantity_remove: int = None):
         """Метод удаляет товар из корзины, если он там есть."""
@@ -38,14 +53,16 @@ class ShoppingBasket:
 
         for product in self.products:
             if product.product_id == product_id:
-                if quantity_remove is None or quantity_remove >= product.quantity:
+                if (
+                    quantity_remove is None
+                    or quantity_remove >= product.quantity
+                ):
                     continue
                 else:
                     product.quantity -= quantity_remove
             new_products.append(product)
-        
-        self.products = new_products
 
+        self.products = new_products
 
     def total_price(self) -> Decimal:
         """Метод рассчитывает общую стоимость всех товаров в корзине."""
