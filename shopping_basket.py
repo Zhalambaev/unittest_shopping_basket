@@ -49,18 +49,23 @@ class ShoppingBasket:
 
     def remove_product(self, product_id: int, quantity_remove: int = None):
         """Метод удаляет товар из корзины, если он там есть."""
+        if product_id not in [product.product_id for product in self.products]:
+            raise ValueError(
+                f'Товара с product_id: {product_id}, нет в корзине.'
+            )
+
         new_products = []
 
         for product in self.products:
-            if product.product_id == product_id:
+            if product.product_id != product_id:
+                new_products.append(product)
+            else:
                 if (
-                    quantity_remove is None
-                    or quantity_remove >= product.quantity
+                    quantity_remove is not None
+                    and quantity_remove < product.quantity
                 ):
-                    continue
-                else:
                     product.quantity -= quantity_remove
-            new_products.append(product)
+                    new_products.append(product)
 
         self.products = new_products
 
